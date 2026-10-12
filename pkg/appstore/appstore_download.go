@@ -149,6 +149,7 @@ func (t *appstore) Download(input DownloadInput) (DownloadOutput, error) {
 
 type platformPackageInfo struct {
 	SupportedPlatforms []string `plist:"CFBundleSupportedPlatforms,omitempty"`
+	RequiresIPhoneOS   bool     `plist:"LSRequiresIPhoneOS,omitempty"`
 }
 
 func (*appstore) validatePackagePlatform(path string, platform Platform) error {
@@ -205,6 +206,12 @@ func (*appstore) validatePackagePlatform(path string, platform Platform) error {
 			if supportedPlatform == expectedPlatform {
 				return nil
 			}
+		}
+
+		// Older iOS apps can declare LSRequiresIPhoneOS without a platform list.
+		// An explicit list still takes precedence, including an empty one.
+		if expectedPlatform == "iPhoneOS" && info.SupportedPlatforms == nil && info.RequiresIPhoneOS {
+			return nil
 		}
 	}
 
